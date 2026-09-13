@@ -1,4 +1,4 @@
-# AyXDesigns WordPress Skill Pack
+# WordPress Skill Pack
 
 ![AyXDesigns WordPress and SEO skills](assets/readme-hero.jpg)
 
