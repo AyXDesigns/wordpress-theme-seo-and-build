@@ -1,6 +1,6 @@
 # AyXDesigns WordPress Skill Pack
 
-![AyXDesigns WordPress and SEO skills](assets/readme-hero.png)
+![AyXDesigns WordPress and SEO skills](assets/readme-hero.jpg)
 
 > 14 focused skills for WordPress theme delivery, SEO workflows, and safer releases in Codex or Claude Code.
 
