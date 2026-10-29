@@ -1,0 +1,17 @@
+{
+  "name": "ayxdesigns",
+  "description": "AyXDesigns skills for WordPress theme delivery and SEO.",
+  "owner": {
+    "name": "AyXDesigns",
+    "url": "https://github.com/AyXDesigns"
+  },
+  "plugins": [
+    {
+      "name": "wordpress-theme-seo-and-build",
+      "source": "./",
+      "description": "22 skills for WordPress theme delivery, local environments, migrations, forms, performance, accessibility, security, privacy and evidence-led SEO.",
+      "category": "development",
+      "tags": ["wordpress", "seo", "themes"]
+    }
+  ]
+}

@@ -1,80 +1,128 @@
 ---
 name: wp-local-stack-setup
-description: Inspect, recommend, and safely configure the right local WordPress environment on Windows, including existing XAMPP, Docker-based wp-env, and WP-CLI, with installation options before any system change.
+description: Choose, set up and repair a local WordPress development environment on Windows, macOS or Linux, covering XAMPP, LocalWP, WordPress Studio, DDEV, Docker-based wp-env, a team-approved stack and WP-CLI. Asks about the user's situation first, then offers options with pros and cons before installing anything. Use when the user mentions local WordPress, localhost, XAMPP, Local by Flywheel, Studio, DDEV, wp-env, Docker, WSL2, WP-CLI, PHP version, "site won't load locally", port 80 in use or "error establishing a database connection". For moving a site between environments, use wp-site-migration.
+license: MIT
+metadata:
+  author: AyXDesigns
+  version: "0.2.0"
 ---
 
 # Local WordPress environment setup
 
-Use for local WordPress environment setup, repair, or configuration on Windows. Start read-only. Treat XAMPP, Docker-based `wp-env`, PHP, MySQL/MariaDB, WordPress files, WP-CLI, and local database credentials as separate components.
+Helps a user end up with one working, isolated local WordPress site on Windows, macOS or Linux, using a stack that suits them. The agent asks first, inspects read-only, offers a choice, and installs only what the user picks.
 
-## Choose the smallest suitable local stack
+## Before you start
 
-Recommend one option from the actual project context before proposing an install:
+- Treat the stack, PHP, the database server, WordPress files, WP-CLI and local credentials as separate parts. A problem in one does not justify replacing the others.
+- An existing working local site is worth more than a newer tool. Do not migrate it just because another option exists.
+- If the user only needs to review content or a design, say so: a stack may not be needed at all.
+- Moving an existing site's database and uploads into the new stack is a separate job. Use `wp-site-migration` if installed; otherwise, stop after the empty site works and ask before importing anything.
 
-| Situation | Preferred option | Reason |
-|---|---|---|
-| Existing XAMPP site, legacy PHP requirement, or project already documented around XAMPP | Keep the isolated XAMPP site | Lowest migration risk and fastest path to parity. |
-| WordPress core, block, or plugin development needing repeatable automated environments | Docker-based `wp-env` | Reproducible environment and closer alignment with official development tooling. |
-| Team already has an approved local stack | Use the approved stack | Preserves team support, documentation, and deployment assumptions. |
-| Simple content review, no code or data change | Do not install a stack by default | Avoids unnecessary software and configuration changes. |
+### Version baseline (as of October 2026, verify at source)
 
-Do not migrate an existing local site merely because another option is newer. Do not install Docker, XAMPP, WP-CLI, a database service, or a global PATH change without explicit approval.
+- New projects: the latest stable WordPress (7.1 at the time of writing), not a beta, RC or nightly unless the user is testing pre-release compatibility.
+- PHP: WordPress recommends 8.3 or later; WordPress 7.0 and 7.1 run on PHP 7.4 to 8.5. Database: MySQL 8.0+ or MariaDB 10.11+.
+- Existing sites: match the production PHP and database versions first. Test an upgrade in a separate copy, never by silently upgrading the working one.
+- Re-check before quoting: <https://wordpress.org/about/requirements/> and <https://make.wordpress.org/core/handbook/references/php-compatibility-and-wordpress-versions/>.
 
-## Version baseline
+## Workflow
 
-For every new local WordPress project:
+### 1. Ask about the situation first
 
-- Recommend PHP 8.4 or later. Confirm the target theme, plugins, database driver, and chosen local stack support the selected PHP version before installation.
-- Install the latest stable WordPress release, not a nightly, beta, or release candidate, unless the task explicitly requires pre-release compatibility testing.
-- Record the exact PHP and WordPress versions used so the environment can be reproduced.
+Before recommending or installing anything, ask these questions in one short message. Skip any the user has already answered, and if you are running on the user's machine, confirm what step 2 can detect instead of asking it.
 
-For an existing site, preserve the production-compatible PHP and WordPress versions first. Create a separate latest-WordPress compatibility fixture when an upgrade is being assessed; do not silently upgrade the working local copy.
-
-## Diagnose before changing anything
-
-Establish:
-
-- whether XAMPP, Docker, `wp-env`, or another approved stack is installed and usable;
-- where the selected stack stores PHP, database, WordPress, and project files, plus their versions;
-- whether Apache and the database service are running, their configured ports, and any port conflicts;
-- whether a WordPress site already exists, its document root, local URL, and database connection state;
-- whether WP-CLI is available and which PHP executable it uses;
-- available disk space, required permissions, backups, and existing sites that could be affected.
-
-Never expose database passwords, API keys, or full configuration contents in output.
-
-## Offer choices before installation or configuration
-
-Before downloading, installing, changing ports, editing configuration, creating databases, or modifying WordPress files, present the relevant options with consequences. For example:
-
-| Need | Options to offer |
+| Topic | Question |
 |---|---|
-| Local web stack | Keep existing XAMPP; use approved Docker-based `wp-env`; install XAMPP; use another approved local stack; stop if a managed environment is required. |
-| PHP compatibility | Use PHP 8.4 or later for a new project; keep a compatible existing version for parity work; install an approved XAMPP version; use a project-specific PHP executable. |
-| WordPress version | Install the latest stable WordPress release for a new project; retain the existing version for parity work; create a separate latest-version fixture for upgrade testing. |
-| WP-CLI | Use existing executable; download the official PHAR; use a project-managed wrapper; stop if installation is not approved. |
-| Database | Reuse an approved empty local database; create a new local database; import an authorised sanitized fixture. |
-| Local URL | Use the existing project URL; use a localhost subdirectory; configure a local virtual host only with explicit approval. |
+| Machine | Which OS and version (Windows 10/11, macOS Intel or Apple silicon, which Linux distribution)? Do you have admin rights? Roughly how much RAM and free disk? |
+| Comfort | Do you prefer a desktop app with buttons, or are you happy in a terminal? Have you used Docker before? |
+| Existing setup | Do you already have local sites or a stack (XAMPP, LocalWP, MAMP, Docker)? Must they keep working untouched? |
+| Project | Is this a new site, a copy of a live site, theme or plugin development, or contributing to WordPress itself? |
+| Parity | Which PHP and database versions does the live host run? Do you need multisite, specific PHP extensions or a particular web server (Apache or Nginx)? |
+| Team | Will other people (possibly on other OSes) or CI need the same setup from a file in the repository? |
+| Docker | Is Docker allowed and already installed? Any licence or company policy limits (Docker Desktop needs a paid plan for larger organisations)? |
+| Extras | Do you need email capture, local HTTPS, Xdebug, a shareable preview link, or push/pull with a host? |
 
-State expected download source, version, disk impact, changed paths, required restart, rollback method, and which existing sites might be affected. Wait for explicit approval before executing a choice.
+Done when: you know the OS, comfort level, existing setups that must survive, the project type and the version targets, or the user has said "you choose".
 
-## Safe configuration principles
+### 2. Inspect read-only
 
-- Keep each local site isolated by document root, database, table prefix, and URL.
-- Prefer project-local paths and explicit PHP/WP-CLI commands over changing global PATH settings.
-- Do not overwrite `wp-config.php`, database data, existing sites, or Apache configuration without a backup and explicit confirmation.
-- Use a version of WP-CLI compatible with the installed PHP. Verify this before relying on it for migrations or evaluation commands.
-- Keep debug display disabled when inspecting rendered pages. Use a local debug log during targeted diagnosis, then restore the prior configuration.
-- Record non-default ports, paths, PHP version, WordPress version, database engine/version, WP-CLI version, and local URL in project documentation without credentials.
+Run the inventory in [references/verify-commands.md](references/verify-commands.md) (bash and PowerShell versions). It only reads: installed tools and versions, running services, listening ports (80, 443, 3306, 8888, 8889), WSL2 and Docker state, disk space, and any existing WordPress install (`wp core version`, `wp option get home`).
 
-## Verification after approved changes
+- Read `wp-config.php` only through `wp config get DB_NAME` style lookups for the constants you need. Never print `DB_PASSWORD`, keys or salts.
+- Note conflicts: two stacks fighting for port 80 or 3306, a global PHP that WP-CLI picks up instead of the stack's PHP, an old Docker engine.
 
-Verify the smallest useful chain:
+Done when: you can list what exists, what runs, and what would conflict.
 
-1. Apache and database service state and reachable local URL.
-2. PHP executable version and required extensions.
-3. WordPress health and database connection.
-4. WP-CLI version, `--path` targeting, and a read-only command.
-5. Site front page and administrator login route.
+### 3. Present the options and wait
 
-Report what changed, checks passed, unresolved issues, rollback path, and any next action needing approval. Do not seed, activate, migrate, install plugins, import a database, or deploy a site unless separately requested.
+Shortlist 2 to 4 options with the table below, then present them as a short question with choices, using the prompt template and per-stack facts in [references/stack-options.md](references/stack-options.md). For each option give **advantages**, **disadvantages**, cost and effort, and who it suits. Recommend one and say why, using the user's own answers.
+
+| Situation | Usually shortlist |
+|---|---|
+| Existing local site or team stack that works | Keep it (repair, do not replace); add one alternative only if it is broken beyond repair |
+| Beginner, wants a desktop app, any OS | LocalWP, WordPress Studio |
+| Team project, config in the repo, mixed OSes | DDEV, wp-env |
+| Block, theme or plugin development, tests or CI | wp-env, DDEV |
+| Must match a live host's PHP, database and web server closely | DDEV, LocalWP (custom environment) |
+| Windows only, legacy project already built around XAMPP | Keep XAMPP; offer DDEV or LocalWP for new projects |
+| Docker not allowed or machine is low on RAM | LocalWP, WordPress Studio, XAMPP (Windows) |
+| Site will be hosted on WordPress.com or Pressable | WordPress Studio |
+| Content or design review only | No stack; use the existing preview |
+
+Stop here until the user picks. Silence is not consent.
+
+Done when: the user has named one option.
+
+### 4. Agree the setup plan
+
+Before any download or change, tell the user, for the chosen option:
+
+- download source (official site only) and version;
+- disk and memory impact, and whether a restart or sign-out is needed;
+- every path, service, port, hosts-file entry, certificate store or PATH change it will make;
+- which existing sites could be affected, and how to undo it.
+
+Done when: the user approves this plan.
+
+### 5. Install and create one isolated site
+
+Follow the OS-specific steps for the chosen stack in [references/setup-commands.md](references/setup-commands.md).
+
+- One site per folder, one database per site, its own table prefix and its own local URL (for example `example.test` or the stack's default domain).
+- Prefer project-local tools (`npx wp-env`, `ddev wp`, the app's site shell) over global installs and PATH edits.
+- Set `WP_ENVIRONMENT_TYPE` to `local` and keep `WP_DEBUG_DISPLAY` off; log to `wp-content/debug.log` only while diagnosing.
+- Create admin credentials with prompts (`--prompt=admin_password`) so they never appear in command history or output.
+
+Done when: the site's home page and `/wp-login.php` load in the browser.
+
+### 6. Make WP-CLI work against this site
+
+Use the stack's built-in WP-CLI where it has one (`ddev wp`, `npx wp-env run cli wp`, LocalWP site shell, `studio wp`). For XAMPP or a bare stack, run the official PHAR with the stack's own PHP and an explicit `--path=`. Check that `wp --info` reports the same PHP the site uses.
+
+Done when: a read-only command such as `wp option get home` returns the local URL.
+
+### 7. Verify and record
+
+Run the verification chain in [references/verify-commands.md](references/verify-commands.md): URL responds, PHP version and extensions, database server version, WordPress version, WP-CLI targeting, login page, and email capture if requested. Then fill in [references/environment-record.md](references/environment-record.md) and save it with the project (no credentials).
+
+Done when: every check passes or each failure is listed with its cause.
+
+## Repair mode
+
+When an existing local site is broken, skip step 3 unless the stack itself is beyond repair. Diagnose in this order and fix the smallest thing: service not running, port conflict, wrong PHP picked up, database not reachable, wrong `home`/`siteurl`, file permissions, then plugins or theme (disable with `wp plugin deactivate --all --skip-plugins` only with approval and a note of what was active).
+
+## Ask before acting
+
+Get explicit approval before you:
+
+- download or install anything, including Docker, WSL2, Homebrew packages, the PHP runtime or WP-CLI;
+- change PATH, the hosts file, a certificate trust store (`mkcert -install`), firewall rules or system services;
+- stop, reconfigure or change the port of a service another site uses;
+- create, drop or import a database, or overwrite `wp-config.php`, `.htaccess` or server config (back them up first);
+- run `wp-env destroy`, `ddev delete` or delete a LocalWP or Studio site;
+- enable a public share link (LocalWP Live Links, Studio preview sites, tunnels), because it exposes the local site;
+- sign in to a third-party account on the user's behalf. The user signs in themselves.
+
+## Output
+
+Hand back the completed [references/environment-record.md](references/environment-record.md): the stack and why it was chosen, versions, local URL, paths, ports, what changed on the machine, checks passed, unresolved issues, how to undo the setup, and the next steps that need approval. Do not seed content, install plugins, import data or deploy unless separately asked.

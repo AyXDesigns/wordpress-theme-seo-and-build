@@ -1,0 +1,14 @@
+{
+  "name": "wordpress-theme-seo-and-build",
+  "displayName": "WordPress Theme, SEO and Build",
+  "version": "0.2.0",
+  "description": "22 skills for WordPress theme delivery, local environments, migrations, forms, performance, accessibility, security, privacy and evidence-led SEO.",
+  "author": {
+    "name": "AyXDesigns",
+    "url": "https://github.com/AyXDesigns"
+  },
+  "homepage": "https://github.com/AyXDesigns/wordpress-theme-seo-and-build",
+  "repository": "https://github.com/AyXDesigns/wordpress-theme-seo-and-build",
+  "license": "MIT",
+  "keywords": ["wordpress", "seo", "block-themes", "wp-cli", "accessibility", "performance", "security", "gdpr"]
+}

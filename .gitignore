@@ -1,0 +1,4 @@
+evals/results/
+*.manifest.json
+*.zip
+node_modules/
